@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ローディングテスト</title>
+    <!-- Robotoフォントをインポート -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 基本的なスタイル */
+        body {
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0; /* ライトモードのデフォルト背景色 */
+            color: #333; /* ライトモードのデフォルト文字色 */
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* ダークモードのスタイル */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1a1a1a;
+                color: #f0f0f0;
+            }
+        }
+
+        /* ローディングスピナーのコンテナ */
+        .loader-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* ローディングスピナーのスタイル */
+        .loader {
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite; /* スピナーのアニメーション */
+            border: 2px solid transparent; /* デフォルトは透明 */
+            border-top-color: #000; /* ライトモードのデフォルト色 */
+        }
+
+        /* ダークモード時のスピナーの色 */
+        @media (prefers-color-scheme: dark) {
+            .loader {
+                border-top-color: #fff;
+            }
+        }
+
+        /* スピナーのアニメーションキーフレーム */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ロード完了ページのスタイル */
+        .loaded-content {
+            display: none; /* デフォルトでは非表示 */
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 90%; /* レスポンシブ対応 */
+            text-align: center;
+        }
+
+        /* ダークモード時のロード完了ページの背景色 */
+        @media (prefers-color-scheme: dark) {
+            .loaded-content {
+                background-color: #2a2a2a;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        /* リセットボタンのスタイル */
+        .reset-button {
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2);
+        }
+
+        .reset-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .reset-button:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+
+    <!-- ローディングスピナーのコンテナ -->
+    <div id="loadingScreen" class="loader-container">
+        <div id="spinner" class="loader"></div>
+    </div>
+
+    <!-- ロード完了コンテンツ -->
+    <div id="loadedContent" class="loaded-content">
+        <h1 class="text-3xl font-bold">ロードが完了しました！</h1>
+        <p class="text-lg">コンテンツの準備ができました。</p>
+        <button id="resetButton" class="reset-button">リセット</button>
+    </div>
+
+    <script>
+        const loadingScreen = document.getElementById('loadingScreen');
+        const loadedContent = document.getElementById('loadedContent');
+        const spinner = document.getElementById('spinner');
+        const resetButton = document.getElementById('resetButton');
+
+        let loadingTimeout; // setTimeoutのIDを保持
+
+        /**
+         * ローダーの色をデバイスのテーマに合わせて設定する関数
+         */
+        function setLoaderColor() {
+            // prefers-color-schemeメディアクエリをチェック
+            const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (isDarkMode) {
+                spinner.style.borderTopColor = '#ffffff'; // ダークモード時は白
+            } else {
+                spinner.style.borderTopColor = '#000000'; // ライトモード時は黒
+            }
+        }
+
+        /**
+         * ページのロード処理を開始する関数
+         */
+        function startLoading() {
+            // ロード画面を表示し、完了画面を非表示にする
+            loadingScreen.style.display = 'flex';
+            loadedContent.style.display = 'none';
+
+            // ローダーの色を更新
+            setLoaderColor();
+
+            // 10秒後にロード完了コンテンツを表示
+            loadingTimeout = setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                loadedContent.style.display = 'flex';
+            }, 10000); // 10秒 = 10000ミリ秒
+        }
+
+        /**
+         * リセットボタンがクリックされた時の処理
+         */
+        resetButton.addEventListener('click', () => {
+            clearTimeout(loadingTimeout); // 既存のタイマーをクリア
+            startLoading(); // 再度ローディングを開始
+        });
+
+        // テーマ変更を監視するリスナーを設定
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            // テーマが変更された場合、ローダーの色を再設定
+            if (loadingScreen.style.display !== 'none') { // ローディング中の場合のみ更新
+                setLoaderColor();
+            }
+        });
+
+        // ページが完全にロードされたらローディングを開始
+        window.onload = startLoading;
+
+    </script>
+</body>
+</html>
