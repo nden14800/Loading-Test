@@ -68,12 +68,12 @@
 
         /* プログレスバーのコンテナ */
         .progress-bar-container {
-            width: 250px; /* プログレスバーの固定幅は維持 */
+            width: 250px; /* プログレスバーの固定幅 */
             height: 8px;
             background-color: #e0e0e0; /* ライトモードのバーの背景色 */
             border-radius: 4px;
             overflow: hidden;
-            position: relative;
+            position: relative; /* 子要素の絶対配置の基準 */
         }
 
         /* ダークモード時のプログレスバーの背景色 */
@@ -92,17 +92,34 @@
             transition: width 0.1s linear; /* スムーズなアニメーション */
         }
 
-        /* プログレスパーセンテージのテキスト */
-        .progress-text {
-            font-size: 1.1rem;
+        /* プログレス情報テキストのコンテナ（パーセンテージと残り時間） */
+        .progress-text-container {
+            display: flex;
+            justify-content: center; /* コンテンツ全体を中央に配置 */
+            align-items: center;
+            gap: 15px; /* パーセンテージと残り時間の間隔 */
+            margin-top: 5px; /* プログレスバーとの間隔 */
+            font-size: 0.95rem;
             color: #555; /* ライトモードのテキスト色 */
+            width: 250px; /* プログレスバーと同じ幅に設定 */
         }
 
-        /* ダークモード時のプログレスパーセンテージのテキスト色 */
+        /* ダークモード時のテキスト色 */
         @media (prefers-color-scheme: dark) {
-            .progress-text {
+            .progress-text-container {
                 color: #ccc;
             }
+        }
+
+        /* プログレスパーセンテージのテキスト */
+        .progress-percent-text {
+            font-weight: bold;
+            /* text-align は flex item では効かないので、justify-content で調整 */
+        }
+
+        /* 残り時間のテキスト */
+        .remaining-time-text {
+            white-space: nowrap; /* テキストが改行されないようにする */
         }
 
         /* 時間設定バーのコンテナ */
@@ -140,8 +157,16 @@
             }
         }
 
+        /* スライダーとボタンのフレックスコンテナ */
+        .slider-with-buttons {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* ボタンとスライダーの間隔 */
+            width: 100%; /* 親要素の幅いっぱいに広げる */
+        }
+
         .duration-slider {
-            width: 100%; /* ここを100%にして親要素の幅に合わせる */
+            flex-grow: 1; /* スライダーが利用可能なスペースを埋める */
             -webkit-appearance: none; /* デフォルトの外観を無効にする */
             appearance: none;
             height: 8px;
@@ -195,6 +220,48 @@
             font-size: 1.1rem;
             font-weight: bold;
             color: #007bff;
+        }
+
+        /* +/- ボタンのスタイル */
+        .duration-button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 32px; /* 固定幅/高さ */
+            height: 32px;
+            border-radius: 50%; /* 円形 */
+            border: 1px solid #007bff;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+            flex-shrink: 0; /* フレックスコンテナ内で縮まないように */
+        }
+
+        .duration-button svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .duration-button:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+            transform: translateY(-1px);
+        }
+
+        .duration-button:active {
+            transform: translateY(0);
+        }
+        /* ダークモード時のボタン */
+        @media (prefers-color-scheme: dark) {
+            .duration-button {
+                background-color: #1a73e8; /* ダークモード用 */
+                border-color: #1a73e8;
+            }
+            .duration-button:hover {
+                background-color: #0e64c2;
+                border-color: #0e64c2;
+            }
         }
 
 
@@ -251,13 +318,29 @@
         <div class="progress-bar-container">
             <div id="progressBarFill" class="progress-bar-fill"></div>
         </div>
-        <div id="progressText" class="progress-text">0%</div>
+        <!-- プログレスバーの真ん中らへんと右側に残り時間を表示するコンテナ -->
+        <div class="progress-text-container">
+            <span id="progressText" class="progress-percent-text">0%</span>
+            <span id="remainingTimeText" class="remaining-time-text">(残り: 0秒)</span>
+        </div>
 
         <!-- ロード時間設定バー -->
         <div class="duration-control-container">
             <label for="durationSlider" class="duration-label">ロード時間設定:</label>
-            <input type="range" id="durationSlider" min="0.5" max="600" step="0.1" value="10" class="duration-slider">
-            <span id="durationValue" class="duration-value">10.0秒</span>
+            <div class="slider-with-buttons">
+                <button id="minusButton" class="duration-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-dash" viewBox="0 0 16 16">
+                        <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
+                    </svg>
+                </button>
+                <input type="range" id="durationSlider" min="0.1" max="1800" step="1" value="10" class="duration-slider">
+                <button id="plusButton" class="duration-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                    </svg>
+                </button>
+            </div>
+            <span id="durationValue" class="duration-value">10秒</span>
         </div>
     </div>
 
@@ -273,23 +356,31 @@
         const loadedContent = document.getElementById('loadedContent');
         const spinner = document.getElementById('spinner');
         const progressBarFill = document.getElementById('progressBarFill');
-        const progressText = document.getElementById('progressText');
+        const progressText = document.getElementById('progressText'); // パーセンテージ表示用
+        const remainingTimeText = document.getElementById('remainingTimeText'); // 残り時間表示用
         const resetButton = document.getElementById('resetButton');
         const durationSlider = document.getElementById('durationSlider');
         const durationValueSpan = document.getElementById('durationValue');
+        const plusButton = document.getElementById('plusButton');
+        const minusButton = document.getElementById('minusButton');
+
+        const INITIAL_LOAD_DURATION_SECONDS = 10; // 初期ロード時間 (秒)
 
         let loadingInterval; // setIntervalのIDを保持
-        let currentLoadingDuration = parseFloat(durationSlider.value) * 1000; // 現在のロード時間 (ミリ秒)
+        let currentLoadingDuration = INITIAL_LOAD_DURATION_SECONDS * 1000; // 現在のロード時間 (ミリ秒)
 
         /**
-         * 秒数を読みやすい形式にフォーマットする関数 (例: 60.5秒 -> 1分0.5秒)
+         * 秒数を読みやすい形式にフォーマットする関数 (例: 60秒 -> 1分0秒)
+         * 小数点は使用せず、整数秒で表示します。
          */
-        function formatDuration(seconds) {
-            if (seconds < 60) {
-                return `${seconds.toFixed(1)}秒`;
+        function formatSecondsToHMS(seconds) {
+            if (seconds < 0) seconds = 0;
+            const s = Math.floor(seconds); // 秒数を整数にする
+            if (s < 60) {
+                return `${s}秒`;
             } else {
-                const minutes = Math.floor(seconds / 60);
-                const remainingSeconds = (seconds % 60).toFixed(1);
+                const minutes = Math.floor(s / 60);
+                const remainingSeconds = s % 60;
                 return `${minutes}分${remainingSeconds}秒`;
             }
         }
@@ -318,9 +409,10 @@
             loadingScreen.style.display = 'flex';
             loadedContent.style.display = 'none';
 
-            // プログレスバーをリセット
+            // プログレスバーとテキストをリセット
             progressBarFill.style.width = '0%';
             progressText.textContent = '0%';
+            remainingTimeText.textContent = '(残り: ' + formatSecondsToHMS(currentLoadingDuration / 1000) + ')'; // 初期残り時間を設定
 
             // ローダーの色を更新
             setLoaderColor();
@@ -333,15 +425,20 @@
                 const elapsedTime = Date.now() - startTime;
                 let progress = (elapsedTime / currentLoadingDuration) * 100;
 
+                // 残り時間の計算 (秒単位)
+                let remainingTimeSeconds = (currentLoadingDuration - elapsedTime) / 1000;
+
                 if (progress >= 100) {
                     progress = 100; // 100%を超えないようにする
+                    remainingTimeSeconds = 0; // 残り時間を0にする
                     clearInterval(loadingInterval); // インターバルをクリア
                     loadingScreen.style.display = 'none'; // ロード画面を非表示
                     loadedContent.style.display = 'flex'; // 完了画面を表示
                 }
 
                 progressBarFill.style.width = `${progress}%`;
-                progressText.textContent = `${Math.floor(progress)}%`;
+                progressText.textContent = `${Math.floor(progress)}%`; // 小数点なし
+                remainingTimeText.textContent = `(残り: ${formatSecondsToHMS(remainingTimeSeconds)})`;
 
             }, updateInterval);
         }
@@ -350,6 +447,10 @@
          * リセットボタンがクリックされた時の処理
          */
         resetButton.addEventListener('click', () => {
+            // ロード時間を初期設定に戻す
+            durationSlider.value = INITIAL_LOAD_DURATION_SECONDS;
+            currentLoadingDuration = INITIAL_LOAD_DURATION_SECONDS * 1000;
+            durationValueSpan.textContent = formatSecondsToHMS(INITIAL_LOAD_DURATION_SECONDS);
             startLoading(); // 再度ローディングを開始
         });
 
@@ -358,24 +459,42 @@
          */
         durationSlider.addEventListener('input', () => {
             currentLoadingDuration = parseFloat(durationSlider.value) * 1000;
-            durationValueSpan.textContent = formatDuration(parseFloat(durationSlider.value));
+            durationValueSpan.textContent = formatSecondsToHMS(parseFloat(durationSlider.value));
             // スライダー変更時に即座にローディングをリセット・再開
             startLoading();
         });
 
-        // 初期ロード時間表示
-        durationValueSpan.textContent = formatDuration(parseFloat(durationSlider.value));
-
-        // テーマ変更を監視するリスナーを設定
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-            // テーマが変更された場合、ローダーの色を再設定
-            if (loadingScreen.style.display !== 'none') { // ローディング中の場合のみ更新
-                setLoaderColor();
-            }
+        /**
+         * プラスボタンがクリックされた時の処理
+         */
+        plusButton.addEventListener('click', () => {
+            let newValue = parseFloat(durationSlider.value) + 1;
+            // スライダーの最大値を超えないように制限
+            durationSlider.value = Math.min(parseFloat(durationSlider.max), newValue);
+            // スライダーのinputイベントを手動で発行し、UIとローディングを更新
+            durationSlider.dispatchEvent(new Event('input'));
         });
 
+        /**
+         * マイナスボタンがクリックされた時の処理
+         */
+        minusButton.addEventListener('click', () => {
+            let newValue = parseFloat(durationSlider.value) - 1;
+            // スライダーの最小値（0.1）を下回らないように制限
+            durationSlider.value = Math.max(parseFloat(durationSlider.min), newValue);
+            // スライダーのinputイベントを手動で発行し、UIとローディングを更新
+            durationSlider.dispatchEvent(new Event('input'));
+        });
+
+
         // ページが完全にロードされたらローディングを開始
-        window.onload = startLoading;
+        window.onload = () => {
+            // 初期ロード時間設定を適用し、ローディングを開始
+            durationSlider.value = INITIAL_LOAD_DURATION_SECONDS;
+            currentLoadingDuration = INITIAL_LOAD_DURATION_SECONDS * 1000;
+            durationValueSpan.textContent = formatSecondsToHMS(INITIAL_LOAD_DURATION_SECONDS);
+            startLoading();
+        };
 
     </script>
 </body>
