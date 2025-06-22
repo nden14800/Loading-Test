@@ -83,7 +83,7 @@
             }
         }
 
-        /* プログレスバーの進行部分 */
+        /* プログ्रेसバーの進行部分 */
         .progress-bar-fill {
             height: 100%;
             width: 0%; /* JavaScriptで更新 */
@@ -96,12 +96,12 @@
         .progress-text-container {
             display: flex;
             justify-content: center; /* コンテンツ全体を中央に配置 */
-            align-items: center;
+            align-items: baseline; /* テキストのベースラインを揃える */
             gap: 15px; /* パーセンテージと残り時間の間隔 */
-            margin-top: 5px; /* プログレスバーとの間隔 */
+            margin-top: 5px; /* プログレスバーとの縦方向の間隔 */
             font-size: 0.95rem;
             color: #555; /* ライトモードのテキスト色 */
-            width: 250px; /* プログレスバーと同じ幅に設定 */
+            /* width: 250px; // この行を削除またはコメントアウトして、残り時間がはみ出るのを許容 */
         }
 
         /* ダークモード時のテキスト色 */
@@ -113,7 +113,7 @@
 
         /* プログレスパーセンテージのテキスト */
         .progress-percent-text {
-            font-weight: bold;
+            /* font-weight: bold; を削除 */
             /* text-align は flex item では効かないので、justify-content で調整 */
         }
 
@@ -318,7 +318,7 @@
         <div class="progress-bar-container">
             <div id="progressBarFill" class="progress-bar-fill"></div>
         </div>
-        <!-- プログレスバーの真ん中らへんと右側に残り時間を表示するコンテナ -->
+        <!-- プログレスバーの下の中央にパーセンテージ、右に残り時間を表示するコンテナ -->
         <div class="progress-text-container">
             <span id="progressText" class="progress-percent-text">0%</span>
             <span id="remainingTimeText" class="remaining-time-text">(残り: 0秒)</span>
@@ -333,7 +333,7 @@
                         <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8"/>
                     </svg>
                 </button>
-                <input type="range" id="durationSlider" min="0.1" max="1800" step="1" value="10" class="duration-slider">
+                <input type="range" id="durationSlider" min="0" max="1800" step="1" value="10" class="duration-slider">
                 <button id="plusButton" class="duration-button">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
                         <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
@@ -480,7 +480,7 @@
          */
         minusButton.addEventListener('click', () => {
             let newValue = parseFloat(durationSlider.value) - 1;
-            // スライダーの最小値（0.1）を下回らないように制限
+            // スライダーの最小値（0）を下回らないように制限
             durationSlider.value = Math.max(parseFloat(durationSlider.min), newValue);
             // スライダーのinputイベントを手動で発行し、UIとローディングを更新
             durationSlider.dispatchEvent(new Event('input'));
