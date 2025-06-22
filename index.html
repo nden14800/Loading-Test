@@ -16,16 +16,17 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            background-color: #f0f0f0; /* ライトモードのデフォルト背景色 */
-            color: #333; /* ライトモードのデフォルト文字色 */
+            /* Tailwind CSSクラスに任せるためカスタムCSSを削除 */
+            /* background-color: #f0f0f0; */
+            /* color: #333; */
             transition: background-color 0.3s, color 0.3s;
         }
 
-        /* ダークモードのスタイル */
+        /* ダークモードのスタイル (Tailwind CSSクラスに任せるため一部削除) */
         @media (prefers-color-scheme: dark) {
             body {
-                background-color: #1a1a1a;
-                color: #f0f0f0;
+                /* background-color: #1a1a1a; */
+                /* color: #f0f0f0; */
             }
         }
 
@@ -50,13 +51,13 @@
             height: 80px;
             animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite; /* スピナーのアニメーション */
             border: 2px solid transparent; /* デフォルトは透明 */
-            border-top-color: #000000; /* ライトモードのデフォルト色 */
+            border-top-color: #000; /* ライトモードのデフォルト色 */
         }
 
         /* ダークモード時のスピナーの色 */
         @media (prefers-color-scheme: dark) {
             .loader {
-                border-top-color: #ffffff; /* ダークモード時は白 */
+                border-top-color: #fff;
             }
         }
 
@@ -92,16 +93,17 @@
             transition: width 0.1s linear; /* スムーズなアニメーション */
         }
 
-        /* プログレス情報テキストのコンテナ（パーセンテージと残り時間） */
+        /* プログレス情報テキストのコンテナ（パーセンテージと残り時間）*/
+        /* 修正点: パーセンテージを中央、残り時間を右に配置 */
         .progress-text-container {
             display: flex;
-            justify-content: center; /* コンテンツ全体を中央に配置 */
-            align-items: baseline; /* テキストのベースラインを揃える */
+            align-items: baseline;
             gap: 15px; /* パーセンテージと残り時間の間隔 */
             margin-top: 5px; /* プログレスバーとの縦方向の間隔 */
             font-size: 0.95rem;
             color: #555; /* ライトモードのテキスト色 */
-            /* width: 250px; // この行を削除またはコメントアウトして、残り時間がはみ出るのを許容 */
+            width: 250px; /* プログレスバーの固定幅と合わせる */
+            position: relative; /* 子要素の絶対配置の基準 */
         }
 
         /* ダークモード時のテキスト色 */
@@ -113,13 +115,19 @@
 
         /* プログレスパーセンテージのテキスト */
         .progress-percent-text {
-            /* font-weight: bold; を削除 */
-            /* text-align は flex item では効かないので、justify-content で調整 */
+            position: absolute; /* 絶対配置で中央に寄せる */
+            left: 50%;
+            transform: translateX(-50%); /* 自身の幅の半分だけ左にずらして中央に配置 */
+            white-space: nowrap; /* テキストが改行されないようにする */
+            z-index: 1; /* 他の要素より手前に表示 */
         }
 
         /* 残り時間のテキスト */
         .remaining-time-text {
+            margin-left: auto; /* フレックスコンテナ内で右端に寄せる */
             white-space: nowrap; /* テキストが改行されないようにする */
+            position: relative; /* 絶対配置の要素と重なった際に表示を保証 */
+            z-index: 2; /* パーセンテージより手前に表示されるように */
         }
 
         /* 時間設定バーのコンテナ */
@@ -412,8 +420,7 @@
             // プログレスバーとテキストをリセット
             progressBarFill.style.width = '0%';
             progressText.textContent = '0%';
-            // 初期残り時間を設定 (currentLoadingDurationが0の場合は0秒と表示)
-            remainingTimeText.textContent = '(残り: ' + formatSecondsToHMS(currentLoadingDuration / 1000) + ')'; 
+            remainingTimeText.textContent = '(残り: ' + formatSecondsToHMS(currentLoadingDuration / 1000) + ')'; // 初期残り時間を設定
 
             // ローダーの色を更新
             setLoaderColor();
@@ -428,12 +435,6 @@
 
                 // 残り時間の計算 (秒単位)
                 let remainingTimeSeconds = (currentLoadingDuration - elapsedTime) / 1000;
-
-                // ロード時間が0の場合の特別処理
-                if (currentLoadingDuration === 0) {
-                    progress = 100;
-                    remainingTimeSeconds = 0;
-                }
 
                 if (progress >= 100) {
                     progress = 100; // 100%を超えないようにする
