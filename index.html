@@ -29,9 +29,10 @@
             }
         }
 
-        /* ローディングスピナーのコンテナ */
+        /* ローディングスピナーとプログレスバー、時間設定バーのコンテナ */
         .loader-container {
             display: flex;
+            flex-direction: column; /* 縦に並べる */
             justify-content: center;
             align-items: center;
             width: 100%;
@@ -39,6 +40,7 @@
             position: absolute;
             top: 0;
             left: 0;
+            gap: 20px; /* 各要素の間隔 */
         }
 
         /* ローディングスピナーのスタイル */
@@ -63,6 +65,138 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* プログレスバーのコンテナ */
+        .progress-bar-container {
+            width: 250px; /* プログレスバーの固定幅は維持 */
+            height: 8px;
+            background-color: #e0e0e0; /* ライトモードのバーの背景色 */
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ダークモード時のプログレスバーの背景色 */
+        @media (prefers-color-scheme: dark) {
+            .progress-bar-container {
+                background-color: #333;
+            }
+        }
+
+        /* プログレスバーの進行部分 */
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%; /* JavaScriptで更新 */
+            background-color: #007bff; /* プログレスの色 */
+            border-radius: 4px;
+            transition: width 0.1s linear; /* スムーズなアニメーション */
+        }
+
+        /* プログレスパーセンテージのテキスト */
+        .progress-text {
+            font-size: 1.1rem;
+            color: #555; /* ライトモードのテキスト色 */
+        }
+
+        /* ダークモード時のプログレスパーセンテージのテキスト色 */
+        @media (prefers-color-scheme: dark) {
+            .progress-text {
+                color: #ccc;
+            }
+        }
+
+        /* 時間設定バーのコンテナ */
+        .duration-control-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px; /* プログレスバーとの間隔 */
+            padding: 15px;
+            /* 画面端から端まで広げるための調整 */
+            width: calc(100% - 40px); /* 左右に20pxずつパディングがあるため */
+            max-width: 600px; /* 必要であれば最大幅を設定 */
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* ダークモード時の時間設定バーコンテナの背景色 */
+        @media (prefers-color-scheme: dark) {
+            .duration-control-container {
+                background-color: #2a2a2a;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            }
+        }
+
+        .duration-label {
+            font-size: 1rem;
+            color: #444;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .duration-label {
+                color: #ddd;
+            }
+        }
+
+        .duration-slider {
+            width: 100%; /* ここを100%にして親要素の幅に合わせる */
+            -webkit-appearance: none; /* デフォルトの外観を無効にする */
+            appearance: none;
+            height: 8px;
+            background: #d3d3d3; /* スライダーのトラックの背景色 */
+            outline: none;
+            border-radius: 4px;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .duration-slider {
+                background: #555;
+            }
+        }
+
+        .duration-slider:hover {
+            opacity: 1;
+        }
+
+        /* スライダーのつまみのスタイル */
+        .duration-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .duration-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .duration-slider::-webkit-slider-thumb:hover {
+            background: #0056b3;
+        }
+
+        .duration-slider::-moz-range-thumb:hover {
+            background: #0056b3;
+        }
+
+        .duration-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+
 
         /* ロード完了ページのスタイル */
         .loaded-content {
@@ -111,9 +245,20 @@
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
 
-    <!-- ローディングスピナーのコンテナ -->
+    <!-- ローディングスピナーとプログレスバー、時間設定バーのコンテナ -->
     <div id="loadingScreen" class="loader-container">
         <div id="spinner" class="loader"></div>
+        <div class="progress-bar-container">
+            <div id="progressBarFill" class="progress-bar-fill"></div>
+        </div>
+        <div id="progressText" class="progress-text">0%</div>
+
+        <!-- ロード時間設定バー -->
+        <div class="duration-control-container">
+            <label for="durationSlider" class="duration-label">ロード時間設定:</label>
+            <input type="range" id="durationSlider" min="0.5" max="600" step="0.1" value="10" class="duration-slider">
+            <span id="durationValue" class="duration-value">10.0秒</span>
+        </div>
     </div>
 
     <!-- ロード完了コンテンツ -->
@@ -127,9 +272,27 @@
         const loadingScreen = document.getElementById('loadingScreen');
         const loadedContent = document.getElementById('loadedContent');
         const spinner = document.getElementById('spinner');
+        const progressBarFill = document.getElementById('progressBarFill');
+        const progressText = document.getElementById('progressText');
         const resetButton = document.getElementById('resetButton');
+        const durationSlider = document.getElementById('durationSlider');
+        const durationValueSpan = document.getElementById('durationValue');
 
-        let loadingTimeout; // setTimeoutのIDを保持
+        let loadingInterval; // setIntervalのIDを保持
+        let currentLoadingDuration = parseFloat(durationSlider.value) * 1000; // 現在のロード時間 (ミリ秒)
+
+        /**
+         * 秒数を読みやすい形式にフォーマットする関数 (例: 60.5秒 -> 1分0.5秒)
+         */
+        function formatDuration(seconds) {
+            if (seconds < 60) {
+                return `${seconds.toFixed(1)}秒`;
+            } else {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = (seconds % 60).toFixed(1);
+                return `${minutes}分${remainingSeconds}秒`;
+            }
+        }
 
         /**
          * ローダーの色をデバイスのテーマに合わせて設定する関数
@@ -148,27 +311,60 @@
          * ページのロード処理を開始する関数
          */
         function startLoading() {
+            // 既存のインターバルをクリア（リセット時や時間変更時に備えて）
+            clearInterval(loadingInterval);
+
             // ロード画面を表示し、完了画面を非表示にする
             loadingScreen.style.display = 'flex';
             loadedContent.style.display = 'none';
 
+            // プログレスバーをリセット
+            progressBarFill.style.width = '0%';
+            progressText.textContent = '0%';
+
             // ローダーの色を更新
             setLoaderColor();
 
-            // 10秒後にロード完了コンテンツを表示
-            loadingTimeout = setTimeout(() => {
-                loadingScreen.style.display = 'none';
-                loadedContent.style.display = 'flex';
-            }, 10000); // 10秒 = 10000ミリ秒
+            let startTime = Date.now(); // ローディング開始時刻
+            const updateInterval = 50; // プログレスバーの更新間隔 (ミリ秒)
+
+            // プログレスバーの更新処理
+            loadingInterval = setInterval(() => {
+                const elapsedTime = Date.now() - startTime;
+                let progress = (elapsedTime / currentLoadingDuration) * 100;
+
+                if (progress >= 100) {
+                    progress = 100; // 100%を超えないようにする
+                    clearInterval(loadingInterval); // インターバルをクリア
+                    loadingScreen.style.display = 'none'; // ロード画面を非表示
+                    loadedContent.style.display = 'flex'; // 完了画面を表示
+                }
+
+                progressBarFill.style.width = `${progress}%`;
+                progressText.textContent = `${Math.floor(progress)}%`;
+
+            }, updateInterval);
         }
 
         /**
          * リセットボタンがクリックされた時の処理
          */
         resetButton.addEventListener('click', () => {
-            clearTimeout(loadingTimeout); // 既存のタイマーをクリア
             startLoading(); // 再度ローディングを開始
         });
+
+        /**
+         * ロード時間設定スライダーが変更された時の処理
+         */
+        durationSlider.addEventListener('input', () => {
+            currentLoadingDuration = parseFloat(durationSlider.value) * 1000;
+            durationValueSpan.textContent = formatDuration(parseFloat(durationSlider.value));
+            // スライダー変更時に即座にローディングをリセット・再開
+            startLoading();
+        });
+
+        // 初期ロード時間表示
+        durationValueSpan.textContent = formatDuration(parseFloat(durationSlider.value));
 
         // テーマ変更を監視するリスナーを設定
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
