@@ -50,13 +50,13 @@
             height: 80px;
             animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite; /* スピナーのアニメーション */
             border: 2px solid transparent; /* デフォルトは透明 */
-            border-top-color: #000; /* ライトモードのデフォルト色 */
+            border-top-color: #000000; /* ライトモードのデフォルト色 */
         }
 
         /* ダークモード時のスピナーの色 */
         @media (prefers-color-scheme: dark) {
             .loader {
-                border-top-color: #fff;
+                border-top-color: #ffffff; /* ダークモード時は白 */
             }
         }
 
@@ -83,7 +83,7 @@
             }
         }
 
-        /* プログ्रेसバーの進行部分 */
+        /* プログレスバーの進行部分 */
         .progress-bar-fill {
             height: 100%;
             width: 0%; /* JavaScriptで更新 */
@@ -412,7 +412,8 @@
             // プログレスバーとテキストをリセット
             progressBarFill.style.width = '0%';
             progressText.textContent = '0%';
-            remainingTimeText.textContent = '(残り: ' + formatSecondsToHMS(currentLoadingDuration / 1000) + ')'; // 初期残り時間を設定
+            // 初期残り時間を設定 (currentLoadingDurationが0の場合は0秒と表示)
+            remainingTimeText.textContent = '(残り: ' + formatSecondsToHMS(currentLoadingDuration / 1000) + ')'; 
 
             // ローダーの色を更新
             setLoaderColor();
@@ -427,6 +428,12 @@
 
                 // 残り時間の計算 (秒単位)
                 let remainingTimeSeconds = (currentLoadingDuration - elapsedTime) / 1000;
+
+                // ロード時間が0の場合の特別処理
+                if (currentLoadingDuration === 0) {
+                    progress = 100;
+                    remainingTimeSeconds = 0;
+                }
 
                 if (progress >= 100) {
                     progress = 100; // 100%を超えないようにする
