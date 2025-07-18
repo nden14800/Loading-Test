@@ -16,9 +16,6 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            /* Tailwind CSSクラスに任せるためカスタムCSSを削除 */
-            /* background-color: #f0f0f0; */
-            /* color: #333; */
             transition: background-color 0.3s, color 0.3s;
         }
 
@@ -44,28 +41,50 @@
             gap: 20px; /* 各要素の間隔 */
         }
 
-        /* ローディングスピナーのスタイル */
+        /* 新しいSVGローディングスピナーのスタイル */
         .loader {
-            border-radius: 50%;
             width: 80px;
             height: 80px;
-            animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite; /* スピナーのアニメーション */
-            border: 2px solid transparent; /* デフォルトは透明 */
-            border-top-color: #000; /* ライトモードのデフォルト色 */
+            animation: rotate 2s linear infinite; /* SVG全体を回転させる */
+            transform-origin: center center; /* 回転の中心を要素の中央に設定 */
+        }
+
+        .loader .path {
+            stroke: #007bff; /* ライトモードのスピナーの色 */
+            stroke-linecap: round; /* 線の端を丸くして柔らかい印象に */
+            animation: dash 1.5s ease-in-out infinite;
         }
 
         /* ダークモード時のスピナーの色 */
         @media (prefers-color-scheme: dark) {
-            .loader {
-                border-top-color: #fff;
+            .loader .path {
+                stroke: #1a73e8; /* ダークモードで映える明るい青 */
             }
         }
 
-        /* スピナーのアニメーションキーフレーム */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        /* SVG全体を回転させるアニメーション */
+        @keyframes rotate {
+            100% {
+                transform: rotate(360deg);
+            }
         }
+
+        /* 線の描画と長さを変化させるアニメーション */
+        @keyframes dash {
+            0% {
+                stroke-dasharray: 1, 150;
+                stroke-dashoffset: 0;
+            }
+            50% {
+                stroke-dasharray: 90, 150;
+                stroke-dashoffset: -35;
+            }
+            100% {
+                stroke-dasharray: 90, 150;
+                stroke-dashoffset: -124;
+            }
+        }
+
 
         /* プログレスバーのコンテナ */
         .progress-bar-container {
@@ -94,7 +113,6 @@
         }
 
         /* プログレス情報テキストのコンテナ（パーセンテージと残り時間）*/
-        /* 修正点: パーセンテージを中央、残り時間を右に配置 */
         .progress-text-container {
             display: flex;
             align-items: baseline;
@@ -138,7 +156,6 @@
             gap: 10px;
             margin-top: 20px; /* プログレスバーとの間隔 */
             padding: 15px;
-            /* 画面端から端まで広げるための調整 */
             width: calc(100% - 40px); /* 左右に20pxずつパディングがあるため */
             max-width: 600px; /* 必要であれば最大幅を設定 */
             background-color: white;
@@ -322,11 +339,14 @@
 
     <!-- ローディングスピナーとプログレスバー、時間設定バーのコンテナ -->
     <div id="loadingScreen" class="loader-container">
-        <div id="spinner" class="loader"></div>
+        <svg id="spinner" class="loader" viewBox="0 0 50 50">
+            <!-- ▼ stroke-widthを "3.5" から "2.5" に変更して、さらに線を細くしました ▼ -->
+            <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="2.5"></circle>
+        </svg>
+
         <div class="progress-bar-container">
             <div id="progressBarFill" class="progress-bar-fill"></div>
         </div>
-        <!-- プログレスバーの下の中央にパーセンテージ、右に残り時間を表示するコンテナ -->
         <div class="progress-text-container">
             <span id="progressText" class="progress-percent-text">0%</span>
             <span id="remainingTimeText" class="remaining-time-text">(残り: 0秒)</span>
@@ -364,26 +384,22 @@
         const loadedContent = document.getElementById('loadedContent');
         const spinner = document.getElementById('spinner');
         const progressBarFill = document.getElementById('progressBarFill');
-        const progressText = document.getElementById('progressText'); // パーセンテージ表示用
-        const remainingTimeText = document.getElementById('remainingTimeText'); // 残り時間表示用
+        const progressText = document.getElementById('progressText');
+        const remainingTimeText = document.getElementById('remainingTimeText');
         const resetButton = document.getElementById('resetButton');
         const durationSlider = document.getElementById('durationSlider');
         const durationValueSpan = document.getElementById('durationValue');
         const plusButton = document.getElementById('plusButton');
         const minusButton = document.getElementById('minusButton');
 
-        const INITIAL_LOAD_DURATION_SECONDS = 10; // 初期ロード時間 (秒)
+        const INITIAL_LOAD_DURATION_SECONDS = 10;
 
-        let loadingInterval; // setIntervalのIDを保持
-        let currentLoadingDuration = INITIAL_LOAD_DURATION_SECONDS * 1000; // 現在のロード時間 (ミリ秒)
+        let loadingInterval;
+        let currentLoadingDuration = INITIAL_LOAD_DURATION_SECONDS * 1000;
 
-        /**
-         * 秒数を読みやすい形式にフォーマットする関数 (例: 60秒 -> 1分0秒)
-         * 小数点は使用せず、整数秒で表示します。
-         */
         function formatSecondsToHMS(seconds) {
             if (seconds < 0) seconds = 0;
-            const s = Math.floor(seconds); // 秒数を整数にする
+            const s = Math.floor(seconds);
             if (s < 60) {
                 return `${s}秒`;
             } else {
@@ -393,117 +409,66 @@
             }
         }
 
-        /**
-         * ローダーの色をデバイスのテーマに合わせて設定する関数
-         */
-        function setLoaderColor() {
-            // prefers-color-schemeメディアクエリをチェック
-            const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            if (isDarkMode) {
-                spinner.style.borderTopColor = '#ffffff'; // ダークモード時は白
-            } else {
-                spinner.style.borderTopColor = '#000000'; // ライトモード時は黒
-            }
-        }
-
-        /**
-         * ページのロード処理を開始する関数
-         */
         function startLoading() {
-            // 既存のインターバルをクリア（リセット時や時間変更時に備えて）
             clearInterval(loadingInterval);
-
-            // ロード画面を表示し、完了画面を非表示にする
             loadingScreen.style.display = 'flex';
             loadedContent.style.display = 'none';
-
-            // プログレスバーとテキストをリセット
             progressBarFill.style.width = '0%';
             progressText.textContent = '0%';
-            remainingTimeText.textContent = '(残り: ' + formatSecondsToHMS(currentLoadingDuration / 1000) + ')'; // 初期残り時間を設定
+            remainingTimeText.textContent = '(残り: ' + formatSecondsToHMS(currentLoadingDuration / 1000) + ')';
+            let startTime = Date.now();
+            const updateInterval = 50;
 
-            // ローダーの色を更新
-            setLoaderColor();
-
-            let startTime = Date.now(); // ローディング開始時刻
-            const updateInterval = 50; // プログレスバーの更新間隔 (ミリ秒)
-
-            // プログレスバーの更新処理
             loadingInterval = setInterval(() => {
                 const elapsedTime = Date.now() - startTime;
                 let progress = (elapsedTime / currentLoadingDuration) * 100;
-
-                // 残り時間の計算 (秒単位)
                 let remainingTimeSeconds = (currentLoadingDuration - elapsedTime) / 1000;
 
                 if (progress >= 100) {
-                    progress = 100; // 100%を超えないようにする
-                    remainingTimeSeconds = 0; // 残り時間を0にする
-                    clearInterval(loadingInterval); // インターバルをクリア
-                    loadingScreen.style.display = 'none'; // ロード画面を非表示
-                    loadedContent.style.display = 'flex'; // 完了画面を表示
+                    progress = 100;
+                    remainingTimeSeconds = 0;
+                    clearInterval(loadingInterval);
+                    loadingScreen.style.display = 'none';
+                    loadedContent.style.display = 'flex';
                 }
 
                 progressBarFill.style.width = `${progress}%`;
-                progressText.textContent = `${Math.floor(progress)}%`; // 小数点なし
+                progressText.textContent = `${Math.floor(progress)}%`;
                 remainingTimeText.textContent = `(残り: ${formatSecondsToHMS(remainingTimeSeconds)})`;
-
             }, updateInterval);
         }
 
-        /**
-         * リセットボタンがクリックされた時の処理
-         */
         resetButton.addEventListener('click', () => {
-            // ロード時間を初期設定に戻す
             durationSlider.value = INITIAL_LOAD_DURATION_SECONDS;
             currentLoadingDuration = INITIAL_LOAD_DURATION_SECONDS * 1000;
             durationValueSpan.textContent = formatSecondsToHMS(INITIAL_LOAD_DURATION_SECONDS);
-            startLoading(); // 再度ローディングを開始
-        });
-
-        /**
-         * ロード時間設定スライダーが変更された時の処理
-         */
-        durationSlider.addEventListener('input', () => {
-            currentLoadingDuration = parseFloat(durationSlider.value) * 1000;
-            durationValueSpan.textContent = formatSecondsToHMS(parseFloat(durationSlider.value));
-            // スライダー変更時に即座にローディングをリセット・再開
             startLoading();
         });
 
-        /**
-         * プラスボタンがクリックされた時の処理
-         */
+        durationSlider.addEventListener('input', () => {
+            currentLoadingDuration = parseFloat(durationSlider.value) * 1000;
+            durationValueSpan.textContent = formatSecondsToHMS(parseFloat(durationSlider.value));
+            startLoading();
+        });
+
         plusButton.addEventListener('click', () => {
             let newValue = parseFloat(durationSlider.value) + 1;
-            // スライダーの最大値を超えないように制限
             durationSlider.value = Math.min(parseFloat(durationSlider.max), newValue);
-            // スライダーのinputイベントを手動で発行し、UIとローディングを更新
             durationSlider.dispatchEvent(new Event('input'));
         });
 
-        /**
-         * マイナスボタンがクリックされた時の処理
-         */
         minusButton.addEventListener('click', () => {
             let newValue = parseFloat(durationSlider.value) - 1;
-            // スライダーの最小値（0）を下回らないように制限
             durationSlider.value = Math.max(parseFloat(durationSlider.min), newValue);
-            // スライダーのinputイベントを手動で発行し、UIとローディングを更新
             durationSlider.dispatchEvent(new Event('input'));
         });
 
-
-        // ページが完全にロードされたらローディングを開始
         window.onload = () => {
-            // 初期ロード時間設定を適用し、ローディングを開始
             durationSlider.value = INITIAL_LOAD_DURATION_SECONDS;
             currentLoadingDuration = INITIAL_LOAD_DURATION_SECONDS * 1000;
             durationValueSpan.textContent = formatSecondsToHMS(INITIAL_LOAD_DURATION_SECONDS);
             startLoading();
         };
-
     </script>
 </body>
 </html>
