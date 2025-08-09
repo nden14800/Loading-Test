@@ -45,16 +45,15 @@
         .loader {
             width: 80px;
             height: 80px;
-            animation: rotate 2s linear infinite; /* SVG全体を回転させる */
+            /* ▼ 修正 ▼: animationの時間を2sから1sに変更し、回転速度を2倍にしました */
+            animation: rotate 1s linear infinite;
             transform-origin: center center; /* 回転の中心を要素の中央に設定 */
         }
 
-        /* ▼ 修正 ▼: animation: dash を削除し、固定の stroke-dasharray を設定 */
         .loader .path {
             stroke: #007bff; /* ライトモードのスピナーの色 */
             stroke-linecap: round; /* 線の端を丸くして柔らかい印象に */
             /* 線の長さを固定するための設定 (円周は約125.6) */
-            /* "89 150" は、89の長さの線と、残りの空白部分を意味します */
             stroke-dasharray: 89 150;
             stroke-dashoffset: 0;
         }
@@ -72,8 +71,6 @@
                 transform: rotate(360deg);
             }
         }
-
-        /* ▼ 修正 ▼: 線の長さを変えるアニメーション(@keyframes dash)を削除しました */
 
 
         /* プログレスバーのコンテナ */
@@ -330,8 +327,8 @@
     <!-- ローディングスピナーとプログレスバー、時間設定バーのコンテナ -->
     <div id="loadingScreen" class="loader-container">
         <svg id="spinner" class="loader" viewBox="0 0 50 50">
-            <!-- ▼ 修正 ▼: stroke-widthを "2.5" から "2" に変更して、線を細くしました -->
-            <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="2"></circle>
+            <!-- ▼ 修正 ▼: stroke-widthを "2" から "1.5" に変更して、線をさらに細くしました -->
+            <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="1.5"></circle>
         </svg>
 
         <div class="progress-bar-container">
