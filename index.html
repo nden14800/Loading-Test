@@ -49,10 +49,14 @@
             transform-origin: center center; /* 回転の中心を要素の中央に設定 */
         }
 
+        /* ▼ 修正 ▼: animation: dash を削除し、固定の stroke-dasharray を設定 */
         .loader .path {
             stroke: #007bff; /* ライトモードのスピナーの色 */
             stroke-linecap: round; /* 線の端を丸くして柔らかい印象に */
-            animation: dash 1.5s ease-in-out infinite;
+            /* 線の長さを固定するための設定 (円周は約125.6) */
+            /* "89 150" は、89の長さの線と、残りの空白部分を意味します */
+            stroke-dasharray: 89 150;
+            stroke-dashoffset: 0;
         }
 
         /* ダークモード時のスピナーの色 */
@@ -69,21 +73,7 @@
             }
         }
 
-        /* 線の描画と長さを変化させるアニメーション */
-        @keyframes dash {
-            0% {
-                stroke-dasharray: 1, 150;
-                stroke-dashoffset: 0;
-            }
-            50% {
-                stroke-dasharray: 90, 150;
-                stroke-dashoffset: -35;
-            }
-            100% {
-                stroke-dasharray: 90, 150;
-                stroke-dashoffset: -124;
-            }
-        }
+        /* ▼ 修正 ▼: 線の長さを変えるアニメーション(@keyframes dash)を削除しました */
 
 
         /* プログレスバーのコンテナ */
@@ -340,8 +330,8 @@
     <!-- ローディングスピナーとプログレスバー、時間設定バーのコンテナ -->
     <div id="loadingScreen" class="loader-container">
         <svg id="spinner" class="loader" viewBox="0 0 50 50">
-            <!-- ▼ stroke-widthを "3.5" から "2.5" に変更して、さらに線を細くしました ▼ -->
-            <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="2.5"></circle>
+            <!-- ▼ 修正 ▼: stroke-widthを "2.5" から "2" に変更して、線を細くしました -->
+            <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="2"></circle>
         </svg>
 
         <div class="progress-bar-container">
